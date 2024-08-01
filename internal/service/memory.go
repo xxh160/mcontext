@@ -89,6 +89,8 @@ func (s *MemoryServiceImpl) Exit(ctx context.Context) error {
 
 // 将 debateMemory 持久化到文件，并删除相关的 redis 变量
 func (s *MemoryServiceImpl) persistDelete(ctx context.Context, tag int) error {
+	log.Printf("Persist and delete: %d\n", tag)
+
 	debateMemory, err := s.memoryRepo.GetDebateMemory(ctx, tag)
 	if err != nil {
 		return err

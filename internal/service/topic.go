@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"mcontext/internal/conf"
 	"mcontext/internal/model"
 	"mcontext/internal/repo"
@@ -20,6 +21,8 @@ type TopicServiceImpl struct {
 }
 
 func (s *TopicServiceImpl) LoadTopicDatas(ctx context.Context) error {
+	log.Printf("TopicService loading...\n")
+
 	fileContent, err := os.ReadFile(conf.TopicDatasPath)
 	if err != nil {
 		return err
@@ -36,6 +39,7 @@ func (s *TopicServiceImpl) LoadTopicDatas(ctx context.Context) error {
 }
 
 func (s *TopicServiceImpl) RemoveTopicDatas(ctx context.Context) error {
+	log.Printf("TopicService removing...\n")
 	return s.repo.RemoveTopicDatas(ctx)
 }
 

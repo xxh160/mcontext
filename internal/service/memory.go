@@ -60,9 +60,11 @@ func (s *MemoryServiceImpl) Exit(ctx context.Context) error {
 		return err
 	}
 
+	log.Printf("Active tags: %v\n", tags)
+
 	for _, tag := range tags {
 		if err = s.persistDelete(ctx, tag); err != nil {
-			log.Println("PersistDebateMemory error: " + err.Error())
+			log.Printf("PersistDebateMemory error: %s\n", err)
 			continue
 		}
 	}

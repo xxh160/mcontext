@@ -6,10 +6,6 @@ type CreateMemoryRequest struct {
 	Question string `json:"question"`
 }
 
-type GetMemoryRequest struct {
-	DebateTag string `json:"debateTag"`
-}
-
 type UpdateMemoryRequest struct {
 	DebateTag string `json:"debateTag"`
 	Dialog    Dialog `json:"dialog"`

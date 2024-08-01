@@ -41,19 +41,19 @@ func (h *MemoryHandler) CreateMemory(c *gin.Context) {
 }
 
 func (h *MemoryHandler) GetMemory(c *gin.Context) {
-	var getReq model.GetMemoryRequest
-	if err := c.BindJSON(&getReq); err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Invalid request body: "+err.Error(), nil))
+	debateTag := c.DefaultQuery("debateTag", "-1")
+	if debateTag == "-1" {
+		c.JSON(http.StatusOK, model.ResponseERR("No debateTag param", nil))
 		return
 	}
 
-	debateTag, err := strconv.Atoi(getReq.DebateTag)
+	tag, err := strconv.Atoi(debateTag)
 	if err != nil {
 		c.JSON(http.StatusOK, model.ResponseERR("Invalid debateTag: "+err.Error(), nil))
 		return
 	}
 
-	debateMemory, err := h.service.GetMemory(c, debateTag)
+	debateMemory, err := h.service.GetMemory(c, tag)
 	if err != nil {
 		c.JSON(http.StatusOK, model.ResponseERR("Failed to get DebateMemory: "+err.Error(), nil))
 		return

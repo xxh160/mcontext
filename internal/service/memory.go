@@ -177,6 +177,7 @@ func (s *MemoryServiceImpl) CreateMemory(ctx context.Context, topic string, role
 }
 
 func (s *MemoryServiceImpl) GetMemory(ctx context.Context, debateTag int) (*model.DebateMemory, error) {
+	log.Printf("GetMemory debateTag: %d\n", debateTag)
 	return s.memoryRepo.GetDebateMemory(ctx, debateTag)
 }
 

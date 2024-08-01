@@ -179,16 +179,9 @@ func (s *MemoryServiceImpl) UpdateMemory(ctx context.Context, debateTag int, dia
 	return nil
 }
 
-// 初始化过程中会调用一次 Init
 func NewMemoryService(memoryRepo repo.MemoryRepo, topicService TopicService) MemoryService {
-	memoryService := &MemoryServiceImpl{
+	return &MemoryServiceImpl{
 		memoryRepo:   memoryRepo,
 		topicService: topicService,
 	}
-
-	if err := memoryService.Init(context.Background()); err != nil {
-		log.Fatalf("NewMemoryService error: %s\n", err)
-	}
-
-	return memoryService
 }

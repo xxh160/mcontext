@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"mcontext/internal/conf"
 	"mcontext/internal/model"
 	"mcontext/internal/repo"
@@ -44,15 +43,8 @@ func (s *TopicServiceImpl) GetPoint(ctx context.Context, topic string, role mode
 	return s.repo.GetPoint(ctx, topic, role)
 }
 
-// 初始化过程中会调用一次 Load
 func NewTopicService(repo repo.TopicRepo) TopicService {
-	topicService := &TopicServiceImpl{
+	return &TopicServiceImpl{
 		repo: repo,
 	}
-
-	if err := topicService.LoadTopicDatas(context.Background()); err != nil {
-		log.Fatalf("NewTopicService: %s\n", err)
-	}
-
-	return topicService
 }

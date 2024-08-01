@@ -18,6 +18,14 @@ func State() gin.HandlerFunc {
 				c.Abort()
 			}
 		}
+
 		c.Next()
+
+		if c.Request.Method == "POST" && (c.Request.URL.Path == "/reset") {
+			util.ChangeServerEnd()
+		} else {
+			util.UseServerEnd()
+		}
+
 	}
 }

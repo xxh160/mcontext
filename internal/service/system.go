@@ -23,6 +23,7 @@ func (s *SystemServiceImpl) Reset(ctx context.Context) error {
 		if err := s.memoryService.Exit(ctx); err != nil {
 			return err
 		}
+		// 这里就不删除 TopicDatas 了
 	}
 
 	// 重新 load TopicDatas

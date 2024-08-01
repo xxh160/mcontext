@@ -15,7 +15,7 @@ type SystemHandler struct {
 func (h *SystemHandler) Reset(c *gin.Context) {
 	err := h.service.Reset(c)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Reset failed", nil))
+		c.JSON(http.StatusOK, model.ResponseERR("Reset failed: "+err.Error(), nil))
 		return
 	}
 

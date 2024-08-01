@@ -2,7 +2,6 @@ package router
 
 import (
 	"context"
-	"log"
 	"mcontext/internal/repo"
 	"mcontext/internal/router/handler"
 	"mcontext/internal/router/middleware"
@@ -12,8 +11,12 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
-func InitRouter(rdb *redis.Client) (*gin.Engine, func(), func()) {
+type ExitFunc func() error
+type InitFunc func() error
+
+func InitRouter(rdb *redis.Client) (*gin.Engine, InitFunc, InitFunc, ExitFunc, ExitFunc) {
 	r := gin.Default()
+
 	r.Use(middleware.State())
 	r.Use(middleware.ErrorResolve())
 
@@ -35,13 +38,25 @@ func InitRouter(rdb *redis.Client) (*gin.Engine, func(), func()) {
 	r.GET("/memory/:debateTag", memoryHandler.GetMemory)
 	r.POST("/memory/:debateTag/update", memoryHandler.UpdateMemory)
 
-	log.Println("Router init finished")
+	memoryInit := func() error {
+		ctx := context.Background()
+		return memoryService.Init(ctx)
+	}
 
-	return r, func() {
-			ctx := context.Background()
-			memoryService.Exit(ctx)
-		}, func() {
-			ctx := context.Background()
-			topicService.RemoveTopicDatas(ctx)
-		}
+	memoryExit := func() error {
+		ctx := context.Background()
+		return memoryService.Exit(ctx)
+	}
+
+	topicInit := func() error {
+		ctx := context.Background()
+		return topicService.LoadTopicDatas(ctx)
+	}
+
+	topicExit := func() error {
+		ctx := context.Background()
+		return topicService.RemoveTopicDatas(ctx)
+	}
+
+	return r, memoryInit, topicInit, memoryExit, topicExit
 }

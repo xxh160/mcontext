@@ -31,3 +31,6 @@ go.work.sum
 output/
 
 main
+
+*.json
+!data/topic_data.json

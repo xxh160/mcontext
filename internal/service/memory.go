@@ -28,6 +28,8 @@ type MemoryServiceImpl struct {
 
 // 初始化 NextDebateTag
 func (s *MemoryServiceImpl) Init(ctx context.Context) error {
+	log.Printf("MemoryService initing...\n")
+
 	fileContent, err := os.ReadFile(conf.RoundPath)
 	if err != nil {
 		return err
@@ -51,6 +53,8 @@ func (s *MemoryServiceImpl) Init(ctx context.Context) error {
 // 将 NextDebateTag 数值持久化到文件 round
 // 同时从 redis 中删除 NextDebateTag 和 ActiveDebateMemoryTags
 func (s *MemoryServiceImpl) Exit(ctx context.Context) error {
+	log.Printf("MemoryService exiting...\n")
+
 	tags, err := s.memoryRepo.GetActiveDebateMemoryTags(ctx)
 	if err != nil {
 		return err

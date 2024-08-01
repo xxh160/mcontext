@@ -166,6 +166,12 @@ func (s *MemoryServiceImpl) CreateMemory(ctx context.Context, topic string, role
 	}
 
 	debateMemory.Dialogs = []model.Dialog{firstDialog}
+
+	// 将 tag 增加到 ActiveDebateMemoryTags set 中
+	if err = s.memoryRepo.AddActiveDebateMemoryTag(ctx, newTag); err != nil {
+		return nil, err
+	}
+
 	return &debateMemory, nil
 }
 

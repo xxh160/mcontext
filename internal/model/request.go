@@ -2,7 +2,7 @@ package model
 
 type InitRequest struct {
 	Topic    string `json:"topic"`
-	Role     Role   `json:"role"`
+	Role     int    `json:"role"`
 	Question string `json:"question"`
 }
 

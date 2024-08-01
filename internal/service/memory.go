@@ -39,6 +39,8 @@ func (s *MemoryServiceImpl) Init(ctx context.Context) error {
 		return err
 	}
 
+	log.Printf("Round: %d\n", num)
+
 	// 设置 NextDebateTag
 	s.memoryRepo.SetNextDebateTag(ctx, num)
 	// ActiveDebateMemoryTags set 惰性创建，没必要在这里创建空集合
@@ -184,7 +186,9 @@ func NewMemoryService(memoryRepo repo.MemoryRepo, topicService TopicService) Mem
 		topicService: topicService,
 	}
 
-	memoryService.Init(context.Background())
+	if err := memoryService.Init(context.Background()); err != nil {
+		log.Fatalf("NewMemoryService error: %s\n", err)
+	}
 
 	return memoryService
 }

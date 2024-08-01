@@ -2,6 +2,7 @@ package router
 
 import (
 	"context"
+	"log"
 	"mcontext/internal/repo"
 	"mcontext/internal/router/handler"
 	"mcontext/internal/router/middleware"
@@ -21,7 +22,7 @@ func InitRouter(rdb *redis.Client) (*gin.Engine, func(), func()) {
 	memoryRepo := repo.NewMemoryRepo(rdb, topicRepo)
 
 	// Service
-	topicService := service.NewTopicservice(topicRepo)
+	topicService := service.NewTopicService(topicRepo)
 	memoryService := service.NewMemoryService(memoryRepo, topicService)
 	systemService := service.NewSystemService(topicService, memoryService)
 
@@ -33,6 +34,8 @@ func InitRouter(rdb *redis.Client) (*gin.Engine, func(), func()) {
 	r.POST("/memory/create", memoryHandler.CreateMemory)
 	r.GET("/memory/:debateTag", memoryHandler.GetMemory)
 	r.POST("/memory/:debateTag/update", memoryHandler.UpdateMemory)
+
+	log.Println("Router init finished")
 
 	return r, func() {
 			ctx := context.Background()

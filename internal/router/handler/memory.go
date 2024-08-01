@@ -21,9 +21,10 @@ func (h *MemoryHandler) CreateMemory(c *gin.Context) {
 		return
 	}
 
-	debateMemory, err := h.service.CreateMemory(c, initReq.Topic, initReq.Role, initReq.Question)
+	wrapperRole := model.Role(initReq.Role)
+	debateMemory, err := h.service.CreateMemory(c, initReq.Topic, wrapperRole, initReq.Question)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Failed to init DebateMemory", nil))
+		c.JSON(http.StatusOK, model.ResponseERR("Failed to init DebateMemory"+err.Error(), nil))
 		return
 	}
 

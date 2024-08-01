@@ -35,8 +35,8 @@ func InitRouter(rdb *redis.Client) (*gin.Engine, InitFunc, InitFunc, ExitFunc, E
 
 	r.POST("/reset", systemHanler.Reset)
 	r.POST("/memory/create", memoryHandler.CreateMemory)
-	r.GET("/memory/:debateTag", memoryHandler.GetMemory)
-	r.POST("/memory/:debateTag/update", memoryHandler.UpdateMemory)
+	r.GET("/memory", memoryHandler.GetMemory)
+	r.POST("/memory/update", memoryHandler.UpdateMemory)
 
 	memoryInit := func() error {
 		ctx := context.Background()

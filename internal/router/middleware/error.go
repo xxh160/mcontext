@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"mcontext/internal/err"
+	"mcontext/internal/erro"
 	"mcontext/internal/model"
 	"net/http"
 
@@ -23,7 +23,7 @@ func ErrorResolve() gin.HandlerFunc {
 		lastErr := c.Errors.Last().Err
 		// 若是自定义的错误则将 msg 返回
 		// 非自定义错误则返回详细错误信息 err.Error
-		if customError, ok := lastErr.(*err.CustomError); ok {
+		if customError, ok := lastErr.(*erro.CustomError); ok {
 			c.JSON(http.StatusOK, model.ResponseERR(customError.Msg, nil))
 		} else {
 			c.JSON(http.StatusOK, model.ResponseERR(lastErr.Error(), nil))

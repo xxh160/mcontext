@@ -22,6 +22,7 @@ type MemoryRepo interface {
 	RemoveActiveDetabeMemoryTag(ctx context.Context, tag int) error
 	GetActiveDebateMemoryTags(ctx context.Context) ([]int, error)
 	RemoveActiveDebateMemoryTags(ctx context.Context) error
+	IsInActiveDebateMemoryTags(ctx context.Context, tag int) (bool, error)
 
 	// 组装成 DebateMemory
 	GetDebateMemory(ctx context.Context, tag int) (*model.DebateMemory, error)
@@ -100,6 +101,10 @@ func (r *MemoryRepoImpl) GetActiveDebateMemoryTags(ctx context.Context) ([]int, 
 // 删除 ActiveDebateMemoryTags 这个 set
 func (r *MemoryRepoImpl) RemoveActiveDebateMemoryTags(ctx context.Context) error {
 	return r.rdb.Del(ctx, "ActiveDebateMemoryTags").Err()
+}
+
+func (r *MemoryRepoImpl) IsInActiveDebateMemoryTags(ctx context.Context, tag int) (bool, error) {
+	return r.rdb.SIsMember(ctx, "ActiveDebateMemoryTags", tag).Result()
 }
 
 // 根据 tag 读取相关信息，组装成一个 DebateMemory

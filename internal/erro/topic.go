@@ -1,4 +1,4 @@
-package err
+package erro
 
 type InvalidTopicData struct {
 	*CustomError

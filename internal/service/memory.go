@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"mcontext/internal/conf"
+	"mcontext/internal/erro"
 	"mcontext/internal/model"
 	"mcontext/internal/repo"
 	"os"
@@ -180,6 +181,18 @@ func (s *MemoryServiceImpl) GetMemory(ctx context.Context, debateTag int) (*mode
 }
 
 func (s *MemoryServiceImpl) UpdateMemory(ctx context.Context, debateTag int, dialog model.Dialog, last bool) error {
+	// 检查 debateTag 是否在 ActiveDebateMemoryTags set 中
+	res, err := s.memoryRepo.IsInActiveDebateMemoryTags(ctx, debateTag)
+	if err != nil {
+		return err
+	}
+
+	// 不在 ActiveDebateMemoryTags set 中
+	if !res {
+		return &erro.CustomError{Msg: "DebateTag " + strconv.Itoa(debateTag) +
+			" is not in ActiveDebateMemoryTags set"}
+	}
+
 	// 存储新的对话
 	if err := s.memoryRepo.AddDebateMemoryDialog(ctx, debateTag, dialog); err != nil {
 		return err

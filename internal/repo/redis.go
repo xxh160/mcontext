@@ -1,17 +1,13 @@
 package repo
 
 import (
-    "github.com/go-redis/redis/v8"
-    "golang.org/x/net/context"
+	"github.com/go-redis/redis/v8"
 )
 
-var (
-    Rdb *redis.Client
-    Ctx = context.Background()
-)
+func InitRedis() *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379", // Redis 服务地址
+	})
 
-func InitializeRedis() {
-    Rdb = redis.NewClient(&redis.Options{
-        Addr: "localhost:6379", // Redis 服务地址
-    })
+	return rdb
 }

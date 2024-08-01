@@ -1,117 +1,190 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
+	"log"
+	"mcontext/internal/conf"
 	"mcontext/internal/model"
 	"mcontext/internal/repo"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
 
-func InitMemory(topic string, role int, question string) (model.DebateMemory, error) {
-	debateTagStr, _ := repo.Rdb.Get(repo.Ctx, "NextDebateTag").Result()
-	debateTag, _ := strconv.Atoi(debateTagStr)
-	repo.Rdb.Incr(repo.Ctx, "NextDebateTag")
-
-	var point string
-	if role == 1 {
-		point, _ = repo.Rdb.HGet(repo.Ctx, "TopicData:"+topic, "ProPoint").Result()
-	} else {
-		point, _ = repo.Rdb.HGet(repo.Ctx, "TopicData:"+topic, "ConPoint").Result()
-	}
-
-	firstDialog := model.Dialog{Question: question, Answer: point}
-	repo.Rdb.Set(repo.Ctx, "DebateMemory:base:"+strconv.Itoa(debateTag), topic+"|"+strconv.Itoa(role), 0)
-	repo.Rdb.RPush(repo.Ctx, "DebateMemory:dialogs:"+strconv.Itoa(debateTag), string(jsonMarshal(firstDialog)))
-	repo.Rdb.SAdd(repo.Ctx, "ActiveDebateMemory", strconv.Itoa(debateTag))
-
-	debateMemory := model.DebateMemory{
-		DebateTag: debateTag,
-		Topic:     topic,
-		Role:      role,
-		Point:     point,
-		Dialogs:   []model.Dialog{firstDialog},
-	}
-	return debateMemory, nil
+type MemoryService interface {
+	Init(ctx context.Context) error
+	Exit(ctx context.Context) error
+	CreateMemory(ctx context.Context, topic string, role model.Role, question string) (*model.DebateMemory, error)
+	GetMemory(ctx context.Context, debateTag int) (*model.DebateMemory, error)
+	UpdateMemory(ctx context.Context, debateTag int, dialog model.Dialog, last bool) error
 }
 
-func GetMemory(debateTag int) (model.DebateMemory, error) {
-	baseData, _ := repo.Rdb.Get(repo.Ctx, "DebateMemory:base:"+strconv.Itoa(debateTag)).Result()
-	parts := strings.Split(baseData, "|")
-	topic := parts[0]
-	role, _ := strconv.Atoi(parts[1])
-
-	var point string
-	if role == 1 {
-		point, _ = repo.Rdb.HGet(repo.Ctx, "TopicData:"+topic, "ProPoint").Result()
-	} else {
-		point, _ = repo.Rdb.HGet(repo.Ctx, "TopicData:"+topic, "ConPoint").Result()
-	}
-
-	dialogsData, _ := repo.Rdb.LRange(repo.Ctx, "DebateMemory:dialogs:"+strconv.Itoa(debateTag), 0, -1).Result()
-	dialogs := make([]model.Dialog, len(dialogsData))
-	for i, d := range dialogsData {
-		json.Unmarshal([]byte(d), &dialogs[i])
-	}
-
-	debateMemory := model.DebateMemory{
-		DebateTag: debateTag,
-		Topic:     topic,
-		Role:      role,
-		Point:     point,
-		Dialogs:   dialogs,
-	}
-	return debateMemory, nil
+type MemoryServiceImpl struct {
+	memoryRepo   repo.MemoryRepo
+	topicService TopicService
 }
 
-func UpdateMemory(debateTag int, dialog model.Dialog, last bool) error {
-	repo.Rdb.RPush(repo.Ctx, "DebateMemory:dialogs:"+strconv.Itoa(debateTag), string(jsonMarshal(dialog)))
-
-	if last {
-		go saveDebateMemoryToFile(strconv.Itoa(debateTag))
+// 初始化 NextDebateTag
+func (s *MemoryServiceImpl) Init(ctx context.Context) error {
+	fileContent, err := os.ReadFile(conf.RoundPath)
+	if err != nil {
+		return err
 	}
+
+	content := strings.TrimSpace(string(fileContent))
+	num, err := strconv.Atoi(content)
+	if err != nil {
+		return err
+	}
+
+	// 设置 NextDebateTag
+	s.memoryRepo.SetNextDebateTag(ctx, num)
+	// ActiveDebateMemoryTags set 惰性创建，没必要在这里创建空集合
 	return nil
 }
 
-func saveDebateMemoryToFile(debateTag string) {
-	baseData, _ := repo.Rdb.Get(repo.Ctx, "DebateMemory:base:"+debateTag).Result()
-	parts := strings.Split(baseData, "|")
-	topic := parts[0]
-	role, _ := strconv.Atoi(parts[1])
-
-	var point string
-	if role == 1 {
-		point, _ = repo.Rdb.HGet(repo.Ctx, "TopicData:"+topic, "ProPoint").Result()
-	} else {
-		point, _ = repo.Rdb.HGet(repo.Ctx, "TopicData:"+topic, "ConPoint").Result()
+// 将 ActiveDebateMemoryTags 所代表的所有 DebateMemory 持久化到文件
+// 将 NextDebateTag 数值持久化到文件 round
+// 同时从 redis 中删除 NextDebateTag 和 ActiveDebateMemoryTags
+func (s *MemoryServiceImpl) Exit(ctx context.Context) error {
+	tags, err := s.memoryRepo.GetActiveDebateMemoryTags(ctx)
+	if err != nil {
+		return err
 	}
 
-	dialogsData, _ := repo.Rdb.LRange(repo.Ctx, "DebateMemory:dialogs:"+debateTag, 0, -1).Result()
-	dialogs := make([]model.Dialog, len(dialogsData))
-	for i, d := range dialogsData {
-		json.Unmarshal([]byte(d), &dialogs[i])
+	for _, tag := range tags {
+		if err = s.persistDelete(ctx, tag); err != nil {
+			log.Println("PersistDebateMemory error: " + err.Error())
+			continue
+		}
 	}
 
-	debateTagInt, _ := strconv.Atoi(debateTag)
-
-	debateMemory := model.DebateMemory{
-		DebateTag: debateTagInt,
-		Topic:     topic,
-		Role:      role,
-		Point:     point,
-		Dialogs:   dialogs,
+	// 删除 ActiveDebateMemoryTags
+	if err = s.memoryRepo.RemoveActiveDebateMemoryTags(ctx); err != nil {
+		return err
 	}
 
-	file, _ := json.MarshalIndent(debateMemory, "", " ")
-	_ = os.WriteFile("data/debate_memory_"+debateTag+".json", file, 0644)
+	// 读取并持久化 NextDebateTag
+	tagNum, err := s.memoryRepo.GetNextDebateTag(ctx)
+	if err != nil {
+		return err
+	}
 
-	repo.Rdb.Del(repo.Ctx, "DebateMemory:base:"+debateTag)
-	repo.Rdb.Del(repo.Ctx, "DebateMemory:dialogs:"+debateTag)
-	repo.Rdb.SRem(repo.Ctx, "ActiveDebateMemory", debateTag)
+	// 覆盖写
+	if err = os.WriteFile(conf.RoundPath, []byte(strconv.Itoa(tagNum)), 0644); err != nil {
+		return err
+	}
+
+	// 删除 NextDebateTag
+	if err = s.memoryRepo.RemoveNextDebateTag(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func jsonMarshal(v interface{}) []byte {
-	data, _ := json.Marshal(v)
-	return data
+// 将 debateMemory 持久化到文件，并删除相关的 redis 变量
+func (s *MemoryServiceImpl) persistDelete(ctx context.Context, tag int) error {
+	debateMemory, err := s.memoryRepo.GetDebateMemory(ctx, tag)
+	if err != nil {
+		return err
+	}
+
+	fileContent, err := json.MarshalIndent(debateMemory, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	// 持久化到 data/debate_memory_{DebateTag}.json
+	filename := filepath.Join(conf.DataDir, "debate_memory_"+strconv.Itoa(debateMemory.DebateTag)+".json")
+	err = os.WriteFile(filename, fileContent, 0644)
+	if err != nil {
+		return err
+	}
+
+	// 删除 debateMemory 相关的基础信息
+	if err = s.memoryRepo.RemoveDebateMemoryBase(ctx, debateMemory.DebateTag); err != nil {
+		return err
+	}
+	// 删除 debateMemory 相关的对话
+	if err = s.memoryRepo.RemoveDebateMemoryDialog(ctx, debateMemory.DebateTag); err != nil {
+		return err
+	}
+	// 从 redis ActiveDebateMemoryTags 中删除这个 debateMemoryTag
+	if err = s.memoryRepo.RemoveActiveDetabeMemoryTag(ctx, debateMemory.DebateTag); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *MemoryServiceImpl) CreateMemory(ctx context.Context, topic string, role model.Role, question string) (*model.DebateMemory, error) {
+	// 获取新 tag
+	newTag, err := s.memoryRepo.IncrGetNextDebateTag(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 构造 DebateMemory 的 base 部分
+	debateMemory := model.DebateMemory{
+		DebateTag: newTag,
+		Topic:     topic,
+		Role:      role,
+	}
+
+	// 存储 base 部分到 redis
+	if err = s.memoryRepo.SetDebateMemoryBase(ctx, newTag, &debateMemory); err != nil {
+		return nil, err
+	}
+
+	// 根据辩题和立场得到立论
+	debateMemory.Point, err = s.topicService.GetPoint(ctx, topic, role)
+	if err != nil {
+		return nil, err
+	}
+
+	// 构造出第一轮对话
+	firstDialog := model.Dialog{Question: question, Answer: debateMemory.Point}
+
+	// 存储第一轮对话
+	if err = s.memoryRepo.AddDebateMemoryDialog(ctx, newTag, firstDialog); err != nil {
+		return nil, err
+	}
+
+	debateMemory.Dialogs = []model.Dialog{firstDialog}
+	return &debateMemory, nil
+}
+
+func (s *MemoryServiceImpl) GetMemory(ctx context.Context, debateTag int) (*model.DebateMemory, error) {
+	return s.memoryRepo.GetDebateMemory(ctx, debateTag)
+}
+
+func (s *MemoryServiceImpl) UpdateMemory(ctx context.Context, debateTag int, dialog model.Dialog, last bool) error {
+	// 存储新的对话
+	if err := s.memoryRepo.AddDebateMemoryDialog(ctx, debateTag, dialog); err != nil {
+		return err
+	}
+
+	// 如果是最后一轮对话，则持久化到文件
+	if last {
+		go func() {
+			s.persistDelete(ctx, debateTag)
+		}()
+	}
+
+	return nil
+}
+
+// 初始化过程中会调用一次 Init
+func NewMemoryService(memoryRepo repo.MemoryRepo, topicService TopicService) MemoryService {
+	memoryService := &MemoryServiceImpl{
+		memoryRepo:   memoryRepo,
+		topicService: topicService,
+	}
+
+	memoryService.Init(context.Background())
+
+	return memoryService
 }

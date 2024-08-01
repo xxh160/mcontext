@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"mcontext/internal/model"
 	"mcontext/internal/service"
@@ -21,8 +22,10 @@ func (h *MemoryHandler) CreateMemory(c *gin.Context) {
 		return
 	}
 
+	// 去除输入的辩题的空格
+	topic := strings.TrimSpace(initReq.Topic)
 	wrapperRole := model.Role(initReq.Role)
-	debateMemory, err := h.service.CreateMemory(c, initReq.Topic, wrapperRole, initReq.Question)
+	debateMemory, err := h.service.CreateMemory(c, topic, wrapperRole, initReq.Question)
 	if err != nil {
 		c.JSON(http.StatusOK, model.ResponseERR("Failed to init DebateMemory: "+err.Error(), nil))
 		return

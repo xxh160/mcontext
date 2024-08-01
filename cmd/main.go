@@ -105,7 +105,6 @@ func main() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Printf("Server listen error: %s\n", err)
 		}
-		log.Printf("Server listening...\n")
 	}()
 
 	quit := make(chan os.Signal, 1)

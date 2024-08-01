@@ -24,7 +24,13 @@ func (h *MemoryHandler) CreateMemory(c *gin.Context) {
 
 	// 去除输入的辩题的空格
 	topic := strings.TrimSpace(initReq.Topic)
-	wrapperRole := model.Role(initReq.Role)
+	// 将输入的 role 转换为 int，百炼平台无法区分数字和字符串
+	roleInt, err := strconv.Atoi(initReq.Role)
+	if err != nil {
+		c.JSON(http.StatusOK, model.ResponseERR("Invalid role: "+err.Error(), nil))
+		return
+	}
+	wrapperRole := model.Role(roleInt)
 	debateMemory, err := h.service.CreateMemory(c, topic, wrapperRole, initReq.Question)
 	if err != nil {
 		c.JSON(http.StatusOK, model.ResponseERR("Failed to init DebateMemory: "+err.Error(), nil))

@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"encoding/json"
+	"log"
 	"mcontext/internal/model"
 	"strconv"
 
@@ -153,7 +154,9 @@ func (r *MemoryRepoImpl) AddDebateMemoryDialog(ctx context.Context, tag int, dia
 
 // 删除 DebateMemory 的对话上下文
 func (r *MemoryRepoImpl) RemoveDebateMemoryDialog(ctx context.Context, tag int) error {
-	return r.rdb.Del(ctx, "DebateMemory:dialogs:"+strconv.Itoa(tag)).Err()
+	key := "DebateMemory:dialogs:" + strconv.Itoa(tag)
+	log.Printf("Remove %s\n", key)
+	return r.rdb.Del(ctx, key).Err()
 }
 
 // 获取某个具体的 DebateMemory 的固定部分
@@ -183,7 +186,9 @@ func (r *MemoryRepoImpl) SetDebateMemoryBase(ctx context.Context, tag int, debat
 
 // 删除某个具体的 DebateMemory 的固定部分
 func (r *MemoryRepoImpl) RemoveDebateMemoryBase(ctx context.Context, tag int) error {
-	return r.rdb.Del(ctx, "DebateMemory:base:"+strconv.Itoa(tag)).Err()
+	key := "DebateMemory:base:" + strconv.Itoa(tag)
+	log.Printf("Remove %s\n", key)
+	return r.rdb.Del(ctx, key).Err()
 }
 
 func NewMemoryRepo(rdb *redis.Client, topicRepo TopicRepo) MemoryRepo {

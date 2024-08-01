@@ -106,6 +106,8 @@ func (s *MemoryServiceImpl) persistDelete(ctx context.Context, tag int) error {
 		return err
 	}
 
+	log.Printf("Save to %s\n", filename)
+
 	// 删除 debateMemory 相关的基础信息
 	if err = s.memoryRepo.RemoveDebateMemoryBase(ctx, debateMemory.DebateTag); err != nil {
 		return err

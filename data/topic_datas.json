@@ -1,0 +1,15 @@
+[
+    {
+        "topicID": 1,
+        "topic": "辩题1",
+        "proPoint": "正方观点1",
+        "conPoint": "反方观点1"
+    },
+    {
+        "topicID": 2,
+        "topic": "辩题2",
+        "proPoint": "正方观点2",
+        "conPoint": "反方观点2"
+    }
+    // 添加更多辩题
+]

@@ -6,6 +6,6 @@ curlie -d '{"topic": "爱与被爱，哪个更幸福？", "role":"1", "question"
     http://47.96.12.150:8080/memory/create
 
 # 自由辩论
-curlie -d "{"dialog": { "question": "被爱更幸福啦，你懂不了的啦", "answer": "你谁？" }, last: false }" \
+curlie -d '{"dialog": { "question": "被爱更幸福啦，你懂不了的啦", "answer": "你谁？" }, "last": false }' \
     POST \
     http://47.96.12.150:8080/memory/2/update

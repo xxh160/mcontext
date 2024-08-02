@@ -173,6 +173,8 @@ func (s *MemoryServiceImpl) CreateMemory(ctx context.Context, topic string, role
 		return nil, err
 	}
 
+	log.Printf("CreateMemory debateTag: %d\n", newTag)
+
 	return &debateMemory, nil
 }
 
@@ -182,6 +184,8 @@ func (s *MemoryServiceImpl) GetMemory(ctx context.Context, debateTag int) (*mode
 }
 
 func (s *MemoryServiceImpl) UpdateMemory(ctx context.Context, debateTag int, dialog model.Dialog, last bool) error {
+	log.Printf("UpdateMemory debateTag: %d\n", debateTag)
+
 	// 检查 debateTag 是否在 ActiveDebateMemoryTags set 中
 	res, err := s.memoryRepo.IsInActiveDebateMemoryTags(ctx, debateTag)
 	if err != nil {

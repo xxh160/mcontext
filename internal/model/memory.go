@@ -1,13 +1,13 @@
 package model
 
-type Role int
+type Role string
 
 const (
-	RolePro Role = 1
-	RoleCon Role = 2
+	RolePro Role = "正方"
+	RoleCon Role = "反方"
 )
 
-func (r Role) String() string {
+func (r Role) CacheName() string {
 	switch r {
 	case RolePro:
 		return "ProPoint"

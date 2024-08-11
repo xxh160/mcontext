@@ -31,6 +31,8 @@ go.work.sum
 output/
 
 main
+mcontext-main
 
+*.log.*
 *.json
 !data/topic_data.json

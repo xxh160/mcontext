@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,22 +19,15 @@ type MemoryHandler struct {
 func (h *MemoryHandler) CreateMemory(c *gin.Context) {
 	var createReq model.CreateMemoryRequest
 	if err := c.BindJSON(&createReq); err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Invalid request body: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 
 	// 去除输入的辩题的空格
 	topic := strings.TrimSpace(createReq.Topic)
-	// 将输入的 role 转换为 int，百炼平台无法区分数字和字符串
-	roleInt, err := strconv.Atoi(createReq.Role)
+	debateMemory, err := h.service.CreateMemory(c, topic, createReq.Role, createReq.Question)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Invalid role: "+err.Error(), nil))
-		return
-	}
-	wrapperRole := model.Role(roleInt)
-	debateMemory, err := h.service.CreateMemory(c, topic, wrapperRole, createReq.Question)
-	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Failed to init DebateMemory: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("failed to init DebateMemory: %w", err))
 		return
 	}
 
@@ -43,19 +37,20 @@ func (h *MemoryHandler) CreateMemory(c *gin.Context) {
 func (h *MemoryHandler) GetMemory(c *gin.Context) {
 	debateTag := c.DefaultQuery("debateTag", "-1")
 	if debateTag == "-1" {
-		c.JSON(http.StatusOK, model.ResponseERR("No debateTag param", nil))
+		_ = c.Error(fmt.Errorf("no debateTag param"))
 		return
 	}
 
+	// 将 debateTag 转为 int
 	tag, err := strconv.Atoi(debateTag)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Invalid debateTag: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("invalid debateTag: %w", err))
 		return
 	}
 
 	debateMemory, err := h.service.GetMemory(c, tag)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Failed to get DebateMemory: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("failed to get DebateMemory: %w", err))
 		return
 	}
 
@@ -65,19 +60,19 @@ func (h *MemoryHandler) GetMemory(c *gin.Context) {
 func (h *MemoryHandler) UpdateMemory(c *gin.Context) {
 	var updateReq model.UpdateMemoryRequest
 	if err := c.BindJSON(&updateReq); err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Invalid request body: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("invalid request body: %w", err))
 		return
 	}
 
 	debateTag, err := strconv.Atoi(updateReq.DebateTag)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Invalid debateTag: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("invalid debateTag: %w", err))
 		return
 	}
 
 	err = h.service.UpdateMemory(c, debateTag, updateReq.Dialog, updateReq.Last)
 	if err != nil {
-		c.JSON(http.StatusOK, model.ResponseERR("Failed to update DebateMemory: "+err.Error(), nil))
+		_ = c.Error(fmt.Errorf("failed to update DebateMemory: %w", err))
 		return
 	}
 

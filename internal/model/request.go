@@ -2,7 +2,7 @@ package model
 
 type CreateMemoryRequest struct {
 	Topic    string `json:"topic"`
-	Role     string `json:"role"`
+	Role     Role   `json:"role"`
 	Question string `json:"question"`
 }
 

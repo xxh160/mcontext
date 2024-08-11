@@ -11,7 +11,7 @@ const (
 	RedisMachine  = "127.0.0.1"
 	RedisPort     = ":6379"
 	RedisAddr     = RedisMachine + RedisPort
-	ServerMachine = "127.0.0.1"
+	ServerMachine = "0.0.0.0"
 	ServerPort    = ":8080"
 	ServerAddr    = ServerMachine + ServerPort
 )

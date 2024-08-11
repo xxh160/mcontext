@@ -169,10 +169,16 @@ func (r *MemoryRepoImpl) GetDebateMemoryBase(ctx context.Context, tag int) (*mod
 		return nil, fmt.Errorf("get debate memory base failed: %w", err)
 	}
 
+	log.Printf("Get baseDataStr: %s\n", baseDataStr)
+
 	debateMemory := model.DebateMemory{}
 	err = json.Unmarshal([]byte(baseDataStr), &debateMemory)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal base data string err: %w", err)
+	}
+
 	// 结构体中存有 tag
-	return &debateMemory, fmt.Errorf("unmarshal base data string err: %w", err)
+	return &debateMemory, nil
 }
 
 // SetDebateMemoryBase 设置某个具体的 DebateMemory 的固定部分

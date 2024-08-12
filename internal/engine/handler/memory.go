@@ -70,7 +70,9 @@ func (h *MemoryHandler) UpdateMemory(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateMemory(c, debateTag, updateReq.Dialog, updateReq.Last)
+	dialog := model.Dialog{Question: updateReq.Question, Answer: updateReq.Answer}
+
+	err = h.service.UpdateMemory(c, debateTag, dialog, updateReq.Last)
 	if err != nil {
 		_ = c.Error(fmt.Errorf("failed to update DebateMemory: %w", err))
 		return

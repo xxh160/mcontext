@@ -8,6 +8,7 @@ type CreateMemoryRequest struct {
 
 type UpdateMemoryRequest struct {
 	DebateTag string `json:"debateTag"`
-	Dialog    Dialog `json:"dialog"`
+	Question  string `json:"question"`
+	Answer    string `json:"answer"`
 	Last      bool   `json:"last"`
 }

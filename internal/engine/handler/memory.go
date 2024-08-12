@@ -71,8 +71,13 @@ func (h *MemoryHandler) UpdateMemory(c *gin.Context) {
 	}
 
 	dialog := model.Dialog{Question: updateReq.Question, Answer: updateReq.Answer}
+	last, err := strconv.ParseBool(updateReq.Last)
+	if err != nil {
+		_ = c.Error(fmt.Errorf("invalid bool last: %w", err))
+		return
+	}
 
-	err = h.service.UpdateMemory(c, debateTag, dialog, updateReq.Last)
+	err = h.service.UpdateMemory(c, debateTag, dialog, last)
 	if err != nil {
 		_ = c.Error(fmt.Errorf("failed to update DebateMemory: %w", err))
 		return

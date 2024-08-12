@@ -10,5 +10,5 @@ type UpdateMemoryRequest struct {
 	DebateTag string `json:"debateTag"`
 	Question  string `json:"question"`
 	Answer    string `json:"answer"`
-	Last      bool   `json:"last"`
+	Last      string `json:"last"`
 }

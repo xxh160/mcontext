@@ -64,12 +64,6 @@ func (h *MemoryHandler) UpdateMemory(c *gin.Context) {
 		return
 	}
 
-	debateTag, err := strconv.Atoi(updateReq.DebateTag)
-	if err != nil {
-		_ = c.Error(fmt.Errorf("invalid debateTag: %w", err))
-		return
-	}
-
 	dialog := model.Dialog{Question: updateReq.Question, Answer: updateReq.Answer}
 	last, err := strconv.ParseBool(updateReq.Last)
 	if err != nil {
@@ -77,7 +71,7 @@ func (h *MemoryHandler) UpdateMemory(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateMemory(c, debateTag, dialog, last)
+	err = h.service.UpdateMemory(c, updateReq.DebateTag, dialog, last)
 	if err != nil {
 		_ = c.Error(fmt.Errorf("failed to update DebateMemory: %w", err))
 		return

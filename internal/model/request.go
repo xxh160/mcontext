@@ -7,7 +7,7 @@ type CreateMemoryRequest struct {
 }
 
 type UpdateMemoryRequest struct {
-	DebateTag string `json:"debateTag"`
+	DebateTag int    `json:"debateTag"`
 	Question  string `json:"question"`
 	Answer    string `json:"answer"`
 	Last      string `json:"last"`

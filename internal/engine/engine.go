@@ -83,14 +83,15 @@ func New() (*Engine, error) {
 	r.exitFunc = func() {
 		ctx := context.Background()
 
-		errTopic := topicService.RemoveAllTopicData(ctx)
-		if errTopic != nil {
-			log.Printf("Cannot remove all topicData: %v", errTopic)
-		}
-
+		// 顺序不能改变：memory exit 需要依赖 topic
 		errMemory := memoryService.Exit(ctx)
 		if errMemory != nil {
 			log.Printf("Cannot exit memoryService: %v", errMemory)
+		}
+
+		errTopic := topicService.RemoveAllTopicData(ctx)
+		if errTopic != nil {
+			log.Printf("Cannot remove all topicData: %v", errTopic)
 		}
 
 		errRdb := rdb.Close()
